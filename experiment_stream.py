@@ -31,7 +31,7 @@ n_head = 4
 n_positions = 40
 device = 'cuda'
 weight_decay = 0.001
-learning_rate = 1e-3
+learning_rate = 1e-3 if arch=='transformer' else 5e-3
 warmup_steps = 500
 save_steps = 600
 eval_steps = 50
@@ -70,6 +70,7 @@ for d in taskA_test: assert all([0<=x<vocab_size for x in d])
 random.shuffle(taskA_test)
 assert len(taskA_test) > 0 #and len(taskB_test) > 0
 print(f'Task A test: {len(taskA_test)}')
+taskA_test_set = set(tuple(x) for x in taskA_test)
 
 # %% generate run description
 run_description = task+' w'+str(n_embd)+' f'+str(weight_frozen)+' l'+str(n_layer)+' '+arch
@@ -177,6 +178,8 @@ class CustomIterDataset(torch.utils.data.IterableDataset):
     def generate(self):
         while True:
             x = gen_single()
+            if tuple(x) in taskA_test_set:
+                continue
             yield {"input_ids": x,
                    "labels": x}
 # Load your custom tokenized dataset (assuming each example is a list of token IDs)
